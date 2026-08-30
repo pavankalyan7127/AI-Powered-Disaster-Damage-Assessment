@@ -2,7 +2,32 @@ import React, { useState } from 'react';
 import { Eye, AlertCircle, Sparkles } from 'lucide-react';
 import { getImageUrl } from '../config';
 
+// Helper function to check if building record has valid, non-empty, non-black image references
+// AND exclude records whose prediction confidence is exactly 100% (1.0)
+export function isValidBuildingCrop(building) {
+  if (!building) return false;
+  
+  const preImg = building.pre_image;
+  const postImg = building.post_image;
+
+  if (!preImg || !postImg) return false;
+  if (typeof preImg !== 'string' || typeof postImg !== 'string') return false;
+  if (preImg.trim() === '' || postImg.trim() === '') return false;
+
+  // Filter out records whose prediction confidence is exactly 100% (1.0 or >= 0.9999)
+  const conf = Number(building.confidence || 0);
+  if (conf >= 0.9999 || Math.round(conf * 100) === 100) {
+    return false;
+  }
+
+  // If images point to empty/placeholder strings, return false
+  if (preImg.includes('placeholder') || postImg.includes('placeholder')) return false;
+
+  return true;
+}
+
 export function BuildingCard({ building, reviewStatus, onRequestReview, onOpenDetail, onExplainAI }) {
+  const [imgError, setImgError] = useState(false);
   const preUrl = getImageUrl(building.pre_image);
   const postUrl = getImageUrl(building.post_image);
 
@@ -24,6 +49,8 @@ export function BuildingCard({ building, reviewStatus, onRequestReview, onOpenDe
     }
   };
 
+  if (imgError) return null; // Exclude card if image fails to load dynamically
+
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 hover:border-slate-700 transition-all flex flex-col justify-between group">
       
@@ -44,12 +71,22 @@ export function BuildingCard({ building, reviewStatus, onRequestReview, onOpenDe
         className="grid grid-cols-2 gap-2 mb-3 cursor-pointer"
       >
         <div className="relative aspect-square rounded-xl bg-slate-950 border border-slate-800 overflow-hidden">
-          <img src={preUrl} alt="Pre" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          <img 
+            src={preUrl} 
+            alt="Pre" 
+            onError={() => setImgError(true)}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+          />
           <span className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-slate-950/80 backdrop-blur-sm text-[9px] font-bold text-slate-300 rounded">PRE</span>
         </div>
 
         <div className="relative aspect-square rounded-xl bg-slate-950 border border-slate-800 overflow-hidden">
-          <img src={postUrl} alt="Post" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          <img 
+            src={postUrl} 
+            alt="Post" 
+            onError={() => setImgError(true)}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+          />
           <span className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-slate-950/80 backdrop-blur-sm text-[9px] font-bold text-slate-300 rounded">POST</span>
         </div>
       </div>
@@ -105,31 +142,62 @@ export function BuildingGrid({ buildings, reviews, onRequestReview, onOpenDetail
 
   const str = (val) => String(val || '');
 
-  const filtered = (buildings || []).filter(b => {
+  // 1. Presentation Filter: Filter out records with missing/empty image references or exactly 100% confidence
+  const validBuildings = (buildings || []).filter(isValidBuildingCrop);
+
+  // 2. Apply user-selected category tab filter
+  const filtered = validBuildings.filter(b => {
     if (filter === 'all') return true;
     if (filter === 'low_conf') return (b.confidence || 0) < 0.8;
+
+    const r = getReviewForBuilding(b.building_id);
+
+    if (filter === 'pending_review') {
+      return r && (r.APPROVED === false || str(r.ADMIN_DECISION).toLowerCase() === 'pending');
+    }
+
+    if (filter === 'completed_review') {
+      return r && (r.APPROVED === true || ['approved', 'overridden'].includes(str(r.ADMIN_DECISION).toLowerCase()));
+    }
+
     return b.predicted_label === filter;
   });
+
+  const filterTabs = [
+    { id: 'all', label: 'All' },
+    { id: 'pending_review', label: 'Pending Reviews' },
+    { id: 'completed_review', label: 'Completed Reviews' },
+    { id: 'low_conf', label: 'Low Conf (<80%)' },
+    { id: 'no-damage', label: 'No Damage' },
+    { id: 'minor-damage', label: 'Minor Damage' },
+    { id: 'major-damage', label: 'Major Damage' },
+    { id: 'destroyed', label: 'Destroyed' }
+  ];
 
   return (
     <div className="space-y-6">
       
       {/* Filter Tabs */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h3 className="text-lg font-bold text-white">Building Crop Predictions</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-bold text-white">Building Crop Predictions</h3>
+          <span className="px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 text-xs font-mono">
+            {filtered.length} Valid Crops
+          </span>
+        </div>
 
         <div className="flex items-center gap-1 p-1 bg-slate-900 border border-slate-800 rounded-2xl overflow-x-auto">
-          {['all', 'low_conf', 'no-damage', 'minor-damage', 'major-damage', 'destroyed'].map((cat) => (
+          {filterTabs.map((tab) => (
             <button
-              key={cat}
-              onClick={() => setFilter(cat)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold capitalize transition-all ${
-                filter === cat
+              key={tab.id}
+              onClick={() => setFilter(tab.id)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                filter === tab.id
                   ? 'bg-cyan-600 text-white shadow-sm'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              {cat === 'low_conf' ? 'Low Conf (<80%)' : cat.replace('-', ' ')}
+              {tab.label}
             </button>
           ))}
         </div>
@@ -138,7 +206,7 @@ export function BuildingGrid({ buildings, reviews, onRequestReview, onOpenDetail
       {/* Grid */}
       {filtered.length === 0 ? (
         <div className="p-12 text-center bg-slate-900 border border-slate-800 rounded-3xl text-slate-500 text-sm">
-          No building crops match the selected filter.
+          No valid building crops match the selected filter.
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

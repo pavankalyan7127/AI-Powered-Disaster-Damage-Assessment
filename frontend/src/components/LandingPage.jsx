@@ -13,8 +13,8 @@ export default function LandingPage({ onOpenLogin, onOpenSignup }) {
               <Shield className="w-6 h-6" />
             </div>
             <div>
-              <span className="font-extrabold text-xl text-white tracking-wide">GeoDamage<span className="text-cyan-400">AI</span></span>
-              <span className="block text-[10px] text-slate-400 font-mono tracking-widest uppercase">Emergency Satellite Assessment</span>
+              <span className="font-extrabold text-xl text-white tracking-wide">Disaster Damage <span className="text-cyan-400">Assessment</span></span>
+              <span className="block text-[10px] text-slate-400 font-mono tracking-widest uppercase">Emergency Satellite Assessment Engine</span>
             </div>
           </div>
 
@@ -108,7 +108,7 @@ export default function LandingPage({ onOpenLogin, onOpenSignup }) {
 
       {/* Footer */}
       <footer className="border-t border-slate-800/80 py-6 text-center text-xs text-slate-500">
-        <p>© 2026 GeoDamageAI Emergency System. Hackathon Demonstration Prototype.</p>
+        <p>© 2026 Disaster Damage Assessment System. Hackathon Demonstration Prototype.</p>
       </footer>
     </div>
   );

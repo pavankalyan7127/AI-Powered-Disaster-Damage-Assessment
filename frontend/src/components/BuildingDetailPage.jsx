@@ -51,7 +51,7 @@ export default function BuildingDetailPage({ building, assessment, currentUser, 
   const preUrl = getImageUrl(building.pre_image);
   const postUrl = getImageUrl(building.post_image);
   const conf = building.confidence || 0;
-  const isLowConfidence = conf < 0.8;
+  const isLowConfidence = conf < 0.8; // Trigger Human Review only for confidence < 80%
 
   const existingReview = reviews.find(
     r => String(r.BUILDING_ID) === String(building.building_id)
@@ -252,31 +252,50 @@ export default function BuildingDetailPage({ building, assessment, currentUser, 
           </div>
 
           {/* Human-in-the-Loop Review Section */}
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Human-in-the-Loop Protocol</span>
-              {existingReview || reviewSubmitted ? (
-                <span className="text-sm font-bold text-cyan-400 capitalize flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                  <span>Review Status: {existingReview?.ADMIN_DECISION || 'Pending Human Review'}</span>
-                </span>
-              ) : (
-                <p className="text-xs text-slate-400">
-                  {isLowConfidence 
-                    ? 'Model confidence is below 80%. You may submit this building to the Admin Review queue.'
-                    : 'High confidence prediction (≥80%). Optional human verification.'}
-                </p>
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Human-in-the-Loop Protocol</span>
+                {existingReview || reviewSubmitted ? (
+                  <span className="text-sm font-bold text-cyan-400 capitalize flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                    <span>Review Status: {existingReview?.ADMIN_DECISION || 'Pending Human Review'}</span>
+                  </span>
+                ) : (
+                  <p className="text-xs text-slate-400">
+                    {isLowConfidence 
+                      ? 'Model confidence is below 80%. You may submit this building to the Admin Review queue.'
+                      : 'High confidence prediction (≥80%). Human review is restricted to low-confidence predictions (<80%).'}
+                  </p>
+                )}
+              </div>
+
+              {/* STRICT 80% RULE: Allow Request Human Review ONLY when confidence < 80% */}
+              {isLowConfidence && !existingReview && !reviewSubmitted && (
+                <button
+                  onClick={handleRequestReview}
+                  className="shrink-0 px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-amber-600/20 transition-all flex items-center gap-2"
+                >
+                  <AlertCircle className="w-4 h-4" />
+                  <span>Request Human Review</span>
+                </button>
               )}
             </div>
 
-            {!existingReview && !reviewSubmitted && (
-              <button
-                onClick={handleRequestReview}
-                className="shrink-0 px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-amber-600/20 transition-all flex items-center gap-2"
-              >
-                <AlertCircle className="w-4 h-4" />
-                <span>Request Human Review</span>
-              </button>
+            {/* Display Admin Reviewer Note if available */}
+            {existingReview?.REVIEW_NOTE && existingReview.REVIEW_NOTE.trim() !== '' && (
+              <div className="p-4 bg-slate-950 border border-amber-500/30 rounded-2xl space-y-1.5 animate-fade-in">
+                <div className="flex items-center gap-2 text-amber-400 text-xs font-bold uppercase tracking-wider">
+                  <MessageSquare className="w-4 h-4" />
+                  <span>Admin Reviewer Note</span>
+                  {existingReview.REVIEWED_AT && (
+                    <span className="text-[10px] text-slate-500 font-normal">({existingReview.REVIEWED_AT})</span>
+                  )}
+                </div>
+                <p className="text-xs text-slate-200 italic leading-relaxed pl-6 border-l-2 border-amber-500/50">
+                  "{existingReview.REVIEW_NOTE}"
+                </p>
+              </div>
             )}
           </div>
 

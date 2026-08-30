@@ -13,6 +13,10 @@ import ModelDetailsPage from './components/ModelDetailsPage';
 import { API_BASE_URL } from './config';
 
 export default function App() {
+  useEffect(() => {
+    document.title = "Disaster Damage Assessment";
+  }, []);
+
   const [currentUser, setCurrentUser] = useState(() => {
     const saved = localStorage.getItem('geo_damage_user');
     return saved ? JSON.parse(saved) : null;
@@ -119,9 +123,17 @@ export default function App() {
 
       setStepIndex(steps.length - 1);
       setTimeout(() => {
-        setActiveAssessment(res.data);
+        const assessment = res.data;
+        setActiveAssessment(assessment);
         setProcessing(false);
-        setCurrentView('results');
+
+        // For direct Building Crop mode, open the single building detail page directly!
+        if (assessment && assessment.BUILDINGS && assessment.BUILDINGS.length > 0) {
+          setActiveBuilding(assessment.BUILDINGS[0]);
+          setCurrentView('building_detail');
+        } else {
+          setCurrentView('results');
+        }
       }, 500);
 
     } catch (err) {
@@ -227,7 +239,15 @@ export default function App() {
                 building={activeBuilding}
                 assessment={activeAssessment}
                 currentUser={currentUser}
-                onBack={() => setCurrentView('results')}
+                onBack={() => {
+                  // If assessment has more than 1 building (e.g. satellite mode), back goes to multi-building results dashboard
+                  if (activeAssessment.TOTAL_BUILDINGS > 1) {
+                    setCurrentView('results');
+                  } else {
+                    // If single building crop mode, back goes directly home / input selector
+                    setCurrentView('home');
+                  }
+                }}
               />
             )}
 
@@ -242,7 +262,12 @@ export default function App() {
                 currentUser={currentUser}
                 onSelectAssessment={(item) => {
                   setActiveAssessment(item);
-                  setCurrentView('results');
+                  if (item.TOTAL_BUILDINGS === 1 && item.BUILDINGS && item.BUILDINGS.length === 1) {
+                    setActiveBuilding(item.BUILDINGS[0]);
+                    setCurrentView('building_detail');
+                  } else {
+                    setCurrentView('results');
+                  }
                 }}
               />
             )}
@@ -256,7 +281,7 @@ export default function App() {
       </main>
 
       <footer className="border-t border-slate-900 py-6 text-center text-xs text-slate-500">
-        <p>© 2026 GeoDamageAI Emergency Disaster Assessment Engine</p>
+        <p>© 2026 Disaster Damage Assessment System</p>
       </footer>
     </div>
   );

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layers, Image as ImageIcon, Zap, Upload, FileUp, Sparkles, AlertCircle } from 'lucide-react';
+import { Layers, Image as ImageIcon, Zap, Upload, FileUp, Sparkles, AlertCircle, ExternalLink, Download } from 'lucide-react';
 
 export default function InputSelector({ onStartSatellite, onStartBuilding, onStartNepalDemo, loading }) {
   const [activeTab, setActiveTab] = useState('satellite');
@@ -94,7 +94,7 @@ export default function InputSelector({ onStartSatellite, onStartBuilding, onSta
               }`}
             >
               <ImageIcon className="w-4 h-4" />
-              <span>Direct Building Crop Mode</span>
+              <span>Direct Building Images Mode</span>
             </button>
           </div>
         </div>
@@ -186,7 +186,7 @@ export default function InputSelector({ onStartSatellite, onStartBuilding, onSta
           </form>
         )}
 
-        {/* TAB 2: DIRECT BUILDING CROP MODE */}
+        {/* TAB 2: DIRECT BUILDING IMAGES MODE */}
         {activeTab === 'building' && (
           <form onSubmit={handleBuildingSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -247,6 +247,35 @@ export default function InputSelector({ onStartSatellite, onStartBuilding, onSta
         )}
 
       </div>
+
+      {/* SAMPLE INPUTS GOOGLE DRIVE BANNER CONTAINER */}
+      <a
+        href="https://drive.google.com/drive/folders/1gxDe6QOy5rTsS2NaqbeZ4v6PcyKPkfWZ?usp=sharing"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block group p-6 bg-slate-900 hover:bg-slate-900/80 border border-slate-800 hover:border-cyan-500/50 rounded-3xl transition-all transform hover:-translate-y-0.5 shadow-xl"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-2xl text-cyan-400 group-hover:scale-110 transition-transform">
+              <Download className="w-6 h-6" />
+            </div>
+            <div>
+              <h4 className="text-base font-bold text-white group-hover:text-cyan-300 transition-colors flex items-center gap-2">
+                <span>Click here to get sample disaster inputs to upload</span>
+                <ExternalLink className="w-4 h-4 text-cyan-400" />
+              </h4>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Access sample satellite GeoTIFFs, building footprints GeoJSON, and direct building image pairs on Google Drive.
+              </p>
+            </div>
+          </div>
+
+          <span className="hidden sm:inline-flex px-4 py-2 bg-slate-950 group-hover:bg-cyan-600 border border-slate-800 group-hover:border-cyan-500 text-slate-300 group-hover:text-white text-xs font-bold rounded-xl transition-all">
+            Open Google Drive
+          </span>
+        </div>
+      </a>
 
     </div>
   );

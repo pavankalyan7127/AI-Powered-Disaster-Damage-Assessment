@@ -158,11 +158,19 @@ async def run_building_crop_assessment(
     assessment_id = f"assessment_{uuid.uuid4().hex[:8]}"
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
 
+    # Save uploaded images to backend_uploads/<assessment_id>/
     session_dir = os.path.join(UPLOADS_DIR, assessment_id)
     os.makedirs(session_dir, exist_ok=True)
 
-    pre_path = os.path.join(session_dir, "pre.png")
-    post_path = os.path.join(session_dir, "post.png")
+    pre_filename = f"pre_{uuid.uuid4().hex[:6]}.png"
+    post_filename = f"post_{uuid.uuid4().hex[:6]}.png"
+
+    pre_path = os.path.join(session_dir, pre_filename)
+    post_path = os.path.join(session_dir, post_filename)
+
+    # Web accessible relative paths
+    pre_web_url = f"backend_uploads/{assessment_id}/{pre_filename}"
+    post_web_url = f"backend_uploads/{assessment_id}/{post_filename}"
 
     try:
         pil_pre = Image.open(pre_image.file).convert("RGB")
@@ -178,8 +186,8 @@ async def run_building_crop_assessment(
     building_entry = {
         "building_id": "b_direct_01",
         "folder": assessment_id,
-        "pre_image": pre_path,
-        "post_image": post_path,
+        "pre_image": pre_web_url,
+        "post_image": post_web_url,
         "predicted_class": pred_res["predicted_class"],
         "predicted_label": pred_res["predicted_label"],
         "confidence": pred_res["confidence"],
