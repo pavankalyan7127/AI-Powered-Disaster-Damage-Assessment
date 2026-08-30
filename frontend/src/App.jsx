@@ -8,6 +8,8 @@ import ProcessingScreen from './components/ProcessingScreen';
 import ResultsPage from './components/ResultsPage';
 import AssessmentHistory from './components/AssessmentHistory';
 import AdminDashboard from './components/AdminDashboard';
+import BuildingDetailPage from './components/BuildingDetailPage';
+import ModelDetailsPage from './components/ModelDetailsPage';
 import { API_BASE_URL } from './config';
 
 export default function App() {
@@ -16,8 +18,9 @@ export default function App() {
     return saved ? JSON.parse(saved) : null;
   });
 
-  const [currentView, setCurrentView] = useState('home'); // 'home', 'results', 'history', 'admin'
+  const [currentView, setCurrentView] = useState('home'); // 'home', 'results', 'history', 'admin', 'building_detail', 'model_details'
   const [activeAssessment, setActiveAssessment] = useState(null);
+  const [activeBuilding, setActiveBuilding] = useState(null);
 
   // Modals
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -75,7 +78,6 @@ export default function App() {
     formData.append('geojson_file', geojson_file);
 
     try {
-      // Simulate visual progress increments
       const interval = setInterval(() => {
         setStepIndex((prev) => (prev < steps.length - 2 ? prev + 1 : prev));
       }, 800);
@@ -212,6 +214,25 @@ export default function App() {
               <ResultsPage
                 assessment={activeAssessment}
                 currentUser={currentUser}
+                onBack={() => setCurrentView('home')}
+                onOpenBuildingDetail={(building) => {
+                  setActiveBuilding(building);
+                  setCurrentView('building_detail');
+                }}
+              />
+            )}
+
+            {currentView === 'building_detail' && activeBuilding && activeAssessment && (
+              <BuildingDetailPage
+                building={activeBuilding}
+                assessment={activeAssessment}
+                currentUser={currentUser}
+                onBack={() => setCurrentView('results')}
+              />
+            )}
+
+            {currentView === 'model_details' && (
+              <ModelDetailsPage
                 onBack={() => setCurrentView('home')}
               />
             )}

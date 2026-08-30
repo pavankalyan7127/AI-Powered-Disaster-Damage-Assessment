@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, LogOut, LayoutDashboard, History, UserCheck, AlertTriangle } from 'lucide-react';
+import { Shield, LogOut, LayoutDashboard, History, UserCheck, Cpu } from 'lucide-react';
 
 export default function Navbar({ currentUser, onNavigate, onLogout, currentView }) {
   if (!currentUser) return null;
@@ -50,6 +50,18 @@ export default function Navbar({ currentUser, onNavigate, onLogout, currentView 
               >
                 <History className="w-4 h-4" />
                 <span>History</span>
+              </button>
+
+              <button
+                onClick={() => onNavigate('model_details')}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  currentView === 'model_details' 
+                    ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' 
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                }`}
+              >
+                <Cpu className="w-4 h-4" />
+                <span>Model Details</span>
               </button>
             </>
           ) : (

@@ -66,19 +66,19 @@ export function BuildingCard({ building, reviewStatus, onRequestReview, onOpenDe
         {/* Action Buttons Row */}
         <div className="flex items-center gap-1.5 pt-1">
           <button
-            onClick={() => onExplainAI(building)}
+            onClick={() => onOpenDetail(building)}
             className="flex-1 py-1.5 bg-cyan-950/60 hover:bg-cyan-900/80 border border-cyan-500/30 text-cyan-300 text-[11px] font-semibold rounded-xl transition-colors flex items-center justify-center gap-1"
-            title="Generate AI Visual Explanation"
+            title="Open Building Detail Page"
           >
-            <Sparkles className="w-3 h-3 text-cyan-400" />
-            <span>Explain AI</span>
+            <Eye className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Building Details</span>
           </button>
 
           {reviewStatus ? (
             <div className="px-2 py-1 bg-slate-950 rounded-xl border border-slate-800 text-[10px] text-cyan-400 font-bold capitalize">
               {reviewStatus.ADMIN_DECISION || 'Pending'}
             </div>
-          ) : isLowConfidence ? (
+          ) : isLowConfidence && (
             <button
               onClick={() => onRequestReview(building)}
               className="py-1.5 px-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[11px] font-bold rounded-xl transition-colors flex items-center gap-1"
@@ -86,14 +86,6 @@ export function BuildingCard({ building, reviewStatus, onRequestReview, onOpenDe
             >
               <AlertCircle className="w-3 h-3" />
               <span>Review</span>
-            </button>
-          ) : (
-            <button
-              onClick={() => onOpenDetail(building)}
-              className="p-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl transition-colors"
-              title="Inspect Details"
-            >
-              <Eye className="w-3.5 h-3.5" />
             </button>
           )}
         </div>

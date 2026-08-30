@@ -9,13 +9,13 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 load_dotenv(os.path.join(BASE_DIR, "backend", ".env"))
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 
-from backend.routes import auth, assessment, history, review, admin, explain
+from backend.routes import auth, assessment, history, review, admin, explain, chat
 from backend.config import UPLOADS_DIR, OUTPUTS_DIR
 
 app = FastAPI(
     title="Disaster Damage Assessment API",
-    description="Backend API supporting Siamese ML inference, disaster damage assessment workflow, and Gemini AI explanations.",
-    version="1.1.0"
+    description="Backend API supporting Siamese ML inference, disaster damage assessment workflow, Gemini AI explanations, and building chat.",
+    version="1.2.0"
 )
 
 app.add_middleware(
@@ -33,6 +33,7 @@ app.include_router(history.router)
 app.include_router(review.router)
 app.include_router(admin.router)
 app.include_router(explain.router)
+app.include_router(chat.router)
 
 # Serve Static Files (crop images, outputs, uploads, nepal images)
 os.makedirs(os.path.join(BASE_DIR, "outputs"), exist_ok=True)
