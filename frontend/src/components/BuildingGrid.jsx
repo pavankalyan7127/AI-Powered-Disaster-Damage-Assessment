@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Eye, AlertCircle, CheckCircle, Clock, ChevronRight } from 'lucide-react';
+import { Eye, AlertCircle, Sparkles } from 'lucide-react';
 import { getImageUrl } from '../config';
 
-export function BuildingCard({ building, reviewStatus, onRequestReview, onOpenDetail }) {
+export function BuildingCard({ building, reviewStatus, onRequestReview, onOpenDetail, onExplainAI }) {
   const preUrl = getImageUrl(building.pre_image);
   const postUrl = getImageUrl(building.post_image);
 
@@ -29,11 +29,11 @@ export function BuildingCard({ building, reviewStatus, onRequestReview, onOpenDe
       
       {/* Top Header */}
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-mono font-bold text-slate-300 truncate max-w-[140px]">
+        <span className="text-xs font-mono font-bold text-slate-300 truncate max-w-[130px]">
           {building.building_id || 'Building'}
         </span>
 
-        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border tracking-wider ${getDamageBadge(building.predicted_label)}`}>
+        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border tracking-wider ${getDamageBadge(building.predicted_label)}`}>
           {building.predicted_label || 'Unknown'}
         </span>
       </div>
@@ -41,7 +41,7 @@ export function BuildingCard({ building, reviewStatus, onRequestReview, onOpenDe
       {/* Pre/Post Image Thumbnail Pair */}
       <div 
         onClick={() => onOpenDetail(building)}
-        className="grid grid-cols-2 gap-2 mb-4 cursor-pointer"
+        className="grid grid-cols-2 gap-2 mb-3 cursor-pointer"
       >
         <div className="relative aspect-square rounded-xl bg-slate-950 border border-slate-800 overflow-hidden">
           <img src={preUrl} alt="Pre" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -55,7 +55,7 @@ export function BuildingCard({ building, reviewStatus, onRequestReview, onOpenDe
       </div>
 
       {/* Confidence & Review Action */}
-      <div className="space-y-3 pt-2 border-t border-slate-800/80">
+      <div className="space-y-2 pt-2 border-t border-slate-800/80">
         <div className="flex items-center justify-between text-xs">
           <span className="text-slate-400 font-medium">Confidence:</span>
           <span className={`font-bold ${isLowConfidence ? 'text-amber-400' : 'text-cyan-400'}`}>
@@ -63,38 +63,48 @@ export function BuildingCard({ building, reviewStatus, onRequestReview, onOpenDe
           </span>
         </div>
 
-        {/* Review Action State */}
-        {reviewStatus ? (
-          <div className="p-2 bg-slate-950 rounded-xl border border-slate-800/80 flex items-center justify-between text-[11px]">
-            <span className="text-slate-400 font-medium">Review Status:</span>
-            <span className="font-bold text-cyan-400 capitalize">
+        {/* Action Buttons Row */}
+        <div className="flex items-center gap-1.5 pt-1">
+          <button
+            onClick={() => onExplainAI(building)}
+            className="flex-1 py-1.5 bg-cyan-950/60 hover:bg-cyan-900/80 border border-cyan-500/30 text-cyan-300 text-[11px] font-semibold rounded-xl transition-colors flex items-center justify-center gap-1"
+            title="Generate AI Visual Explanation"
+          >
+            <Sparkles className="w-3 h-3 text-cyan-400" />
+            <span>Explain AI</span>
+          </button>
+
+          {reviewStatus ? (
+            <div className="px-2 py-1 bg-slate-950 rounded-xl border border-slate-800 text-[10px] text-cyan-400 font-bold capitalize">
               {reviewStatus.ADMIN_DECISION || 'Pending'}
-            </span>
-          </div>
-        ) : isLowConfidence ? (
-          <button
-            onClick={() => onRequestReview(building)}
-            className="w-full py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5"
-          >
-            <AlertCircle className="w-3.5 h-3.5" />
-            <span>Request Human Review</span>
-          </button>
-        ) : (
-          <button
-            onClick={() => onOpenDetail(building)}
-            className="w-full py-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-medium rounded-xl transition-colors flex items-center justify-center gap-1"
-          >
-            <Eye className="w-3.5 h-3.5" />
-            <span>Inspect Details</span>
-          </button>
-        )}
+            </div>
+          ) : isLowConfidence ? (
+            <button
+              onClick={() => onRequestReview(building)}
+              className="py-1.5 px-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[11px] font-bold rounded-xl transition-colors flex items-center gap-1"
+              title="Request Human Review"
+            >
+              <AlertCircle className="w-3 h-3" />
+              <span>Review</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => onOpenDetail(building)}
+              className="p-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl transition-colors"
+              title="Inspect Details"
+            >
+              <Eye className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
       </div>
 
     </div>
   );
 }
 
-export function BuildingGrid({ buildings, reviews, onRequestReview, onOpenDetail }) {
+export function BuildingGrid({ buildings, reviews, onRequestReview, onOpenDetail, onExplainAI }) {
   const [filter, setFilter] = useState('all');
 
   const getReviewForBuilding = (buildingId) => {
@@ -147,6 +157,7 @@ export function BuildingGrid({ buildings, reviews, onRequestReview, onOpenDetail
               reviewStatus={getReviewForBuilding(b.building_id)}
               onRequestReview={onRequestReview}
               onOpenDetail={onOpenDetail}
+              onExplainAI={onExplainAI}
             />
           ))}
         </div>

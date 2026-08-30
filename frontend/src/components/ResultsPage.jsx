@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Clock, ShieldCheck, Download, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Clock, ShieldCheck } from 'lucide-react';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
 import { StatisticsCards, DamageChart } from './StatisticsCards';
 import { BuildingGrid } from './BuildingGrid';
 import BuildingDetailModal from './BuildingDetailModal';
+import ExplainModal from './ExplainModal';
 
 export default function ResultsPage({ assessment, currentUser, onBack }) {
   const [reviews, setReviews] = useState([]);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
+  const [explainBuilding, setExplainBuilding] = useState(null);
+  const [explanationData, setExplanationData] = useState(null);
+  const [explainLoading, setExplainLoading] = useState(false);
+  const [explainError, setExplainError] = useState('');
   const [notification, setNotification] = useState('');
 
   const fetchUserReviews = async () => {
@@ -44,6 +49,29 @@ export default function ResultsPage({ assessment, currentUser, onBack }) {
       fetchUserReviews();
     } catch (err) {
       console.error("Failed to request human review:", err);
+    }
+  };
+
+  const handleExplainAI = async (building) => {
+    if (!currentUser || !assessment) return;
+    setExplainBuilding(building);
+    setExplanationData(null);
+    setExplainError('');
+    setExplainLoading(true);
+
+    try {
+      const res = await axios.post(`${API_BASE_URL}/api/explain`, {
+        user_id: String(currentUser.id),
+        assessment_id: String(assessment.ASSESSMENT_ID),
+        building_id: String(building.building_id)
+      });
+      setExplanationData(res.data);
+    } catch (err) {
+      setExplainError(
+        err.response?.data?.detail || 'Unable to generate AI explanation. Please check backend GEMINI_API_KEY configuration.'
+      );
+    } finally {
+      setExplainLoading(false);
     }
   };
 
@@ -109,7 +137,7 @@ export default function ResultsPage({ assessment, currentUser, onBack }) {
             </div>
 
             <p className="text-xs text-slate-400 leading-relaxed pt-2">
-              Building crops with prediction confidence under 80% feature an explicit <span className="text-amber-400 font-semibold">Request Human Review</span> button. Submitted requests route directly to the Admin Portal.
+              Building cards include an <span className="text-cyan-400 font-semibold">Explain AI</span> button powered by Gemini 2.5 Flash to generate human-readable visual explanations comparing PRE vs POST structural changes without overriding computer vision predictions.
             </p>
           </div>
         </div>
@@ -121,6 +149,7 @@ export default function ResultsPage({ assessment, currentUser, onBack }) {
         reviews={reviews}
         onRequestReview={handleRequestReview}
         onOpenDetail={(building) => setSelectedBuilding(building)}
+        onExplainAI={handleExplainAI}
       />
 
       {/* Building Detail Modal */}
@@ -130,6 +159,21 @@ export default function ResultsPage({ assessment, currentUser, onBack }) {
           reviewStatus={reviews.find(r => String(r.BUILDING_ID) === String(selectedBuilding.building_id))}
           onRequestReview={handleRequestReview}
           onClose={() => setSelectedBuilding(null)}
+        />
+      )}
+
+      {/* Gemini AI Visual Explanation Modal */}
+      {explainBuilding && (
+        <ExplainModal
+          building={explainBuilding}
+          explanation={explanationData}
+          loading={explainLoading}
+          error={explainError}
+          onClose={() => {
+            setExplainBuilding(null);
+            setExplanationData(null);
+            setExplainError('');
+          }}
         />
       )}
 
